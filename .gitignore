@@ -1,0 +1,21 @@
+# Keil build artifacts
+output/
+listing/*.lst
+listing/*.map
+*.axf
+*.hex
+*.o
+*.d
+*.crf
+*.dep
+
+# Keil user-specific files
+*.uvguix.*
+
+# uni-app generated artifacts
+uni.APP/unpackage/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
