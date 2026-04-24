@@ -748,3 +748,4 @@ void cJSON_Minify(char *json)
 	}
 	*into=0;	/* and null-terminate. */
 }
+

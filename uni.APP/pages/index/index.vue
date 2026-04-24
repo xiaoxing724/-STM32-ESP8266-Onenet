@@ -61,6 +61,7 @@
 				temp: '',
 				humi: '',
 				led: false,
+				fanSpeed: 0,
 				token: '',
 			}
 		},
@@ -79,6 +80,11 @@
 			}, 3000)
 		},
 		methods: {
+			findPropValue(list, identifier) {
+				if (!Array.isArray(list)) return undefined;
+				const item = list.find(it => it && it.identifier === identifier);
+				return item ? item.value : undefined;
+			},
 			fetchDevData() {
 				uni.request({
 					url: 'https://iot-api.heclouds.com/thingmodel/query-device-property',
@@ -93,10 +99,16 @@
 					},
 					success: (res) => {
 						console.log(res.data);
-						this.fanSpeed = parseInt(res.data.data[0].value / 30) || 0;
-						this.humi = res.data.data[1].value;
-						this.led = res.data.data[2].value === 'true';
-						this.temp = res.data.data[3].value;
+						const data = res && res.data && res.data.data ? res.data.data : [];
+						const fanVal = this.findPropValue(data, 'fan_value');
+						const humiVal = this.findPropValue(data, 'humidity_value');
+						const ledVal = this.findPropValue(data, 'led');
+						const tempVal = this.findPropValue(data, 'temp_value');
+
+						if (fanVal !== undefined) this.fanSpeed = parseInt(fanVal) || 0;
+						if (humiVal !== undefined) this.humi = humiVal;
+						if (ledVal !== undefined) this.led = (ledVal === true || ledVal === 'true' || ledVal === 1 || ledVal === '1');
+						if (tempVal !== undefined) this.temp = tempVal;
 					}
 				});
 			},
@@ -131,7 +143,7 @@
 						product_id: '1b8L52evN5',
 						device_name: 'dev01',
 						params: {
-							"fan": speed*30 // 假设接口参数为fan_speed，根据实际情况调整
+							"fan_value": speed
 						}
 					},
 					header: {

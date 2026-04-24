@@ -1,6 +1,6 @@
 #include "stm32f10x.h"
 
-//Ó²¼şÇı¶¯
+//ç¡¬ä»¶é©±åŠ¨
 #include "key.h"
 #include "delay.h"
 #include "led.h"
@@ -8,15 +8,15 @@
 
 /*
 ************************************************************
-*	º¯ÊıÃû³Æ£º	Key_Init
+*	å‡½æ•°åç§°ï¼š	Key_Init
 *
-*	º¯Êı¹¦ÄÜ£º	key³õÊ¼»¯
+*	å‡½æ•°åŠŸèƒ½ï¼š	keyåˆå§‹åŒ–
 *
-*	Èë¿Ú²ÎÊı£º	ÎŞ
+*	å…¥å£å‚æ•°ï¼š	æ— 
 *
-*	·µ»Ø²ÎÊı£º	ÎŞ
+*	è¿”å›å‚æ•°ï¼š	æ— 
 *
-*	ËµÃ÷£º		
+*	è¯´æ˜ï¼š	
 ************************************************************
 */
 void Key_Init(void)
@@ -26,14 +26,14 @@ void Key_Init(void)
 	EXTI_InitTypeDef EXTI_InitStructure;
 	NVIC_InitTypeDef NVIC_InitStructure;
 	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);		//´ò¿ªGPIOBµÄÊ±ÖÓ
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB, ENABLE);		//æ‰“å¼€GPIOBçš„æ—¶é’Ÿ
 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE);
 	
-	GPIO_Initstructure.GPIO_Mode = GPIO_Mode_IPU;				//ÉèÖÃÎªÊä³ö
-	GPIO_Initstructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_11;						//½«³õÊ¼»¯µÄPin½Å
-	GPIO_Initstructure.GPIO_Speed = GPIO_Speed_50MHz;				//¿É³ĞÔØµÄ×î´óÆµÂÊ
+	GPIO_Initstructure.GPIO_Mode = GPIO_Mode_IPU;			 //è®¾ç½®ä¸ºè¾“å‡ºä¸Šæ‹‰è¾“å…¥æ¨¡å¼
+	GPIO_Initstructure.GPIO_Pin = GPIO_Pin_1 | GPIO_Pin_11;						//å°†åˆå§‹åŒ–çš„Pinè„šè®¾ç½®ä¸º1å’Œ11
+	GPIO_Initstructure.GPIO_Speed = GPIO_Speed_50MHz;				//å¯æ‰¿è½½çš„æœ€å¤§é¢‘ç‡
 	
-	GPIO_Init(GPIOB, &GPIO_Initstructure);							//³õÊ¼»¯GPIOB
+	GPIO_Init(GPIOB, &GPIO_Initstructure);							//åˆå§‹åŒ–GPIOB
 	
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource1);
 	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource11);

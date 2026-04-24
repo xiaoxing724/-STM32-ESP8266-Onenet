@@ -1,10 +1,95 @@
 #include "stm32f10x.h"
 #include "OLED.h"
 #include "OLED_Font.h"
+#include <string.h>
+
+#ifndef OLED_I2C_ADDRESS
+#define OLED_I2C_ADDRESS	0x78
+#endif
+
+#ifndef OLED_I2C_ADDRESS_ALT
+#define OLED_I2C_ADDRESS_ALT	0x7A
+#endif
 
 /*引脚配置*/
 #define OLED_W_SCL(x)		GPIO_WriteBit(GPIOB, GPIO_Pin_8, (BitAction)(x))
 #define OLED_W_SDA(x)		GPIO_WriteBit(GPIOB, GPIO_Pin_9, (BitAction)(x))
+
+#define OLED_PAGE_COUNT	8
+#define OLED_COL_COUNT	128
+
+static uint8_t oled_gram[OLED_PAGE_COUNT][OLED_COL_COUNT];
+static uint8_t oled_dirty_min[OLED_PAGE_COUNT];
+static uint8_t oled_dirty_max[OLED_PAGE_COUNT];
+static uint8_t oled_dirty = 0;
+
+/*软I2C延时，避免时钟翻转过快导致OLED无响应*/
+static void OLED_I2C_Delay(void)
+{
+	volatile uint16_t i;
+	for (i = 0; i < 80; i++)
+	{
+		__NOP();
+	}
+}
+
+/* 先声明底层函数，避免C89下隐式声明导致类型冲突 */
+void OLED_I2C_Start(void);
+void OLED_I2C_SendByte(uint8_t Byte);
+void OLED_I2C_Stop(void);
+
+static void OLED_WriteDataBurst(uint8_t Address, const uint8_t *Data, uint8_t Len)
+{
+	uint8_t i;
+
+	OLED_I2C_Start();
+	OLED_I2C_SendByte(Address);
+	OLED_I2C_SendByte(0x40);
+	for(i = 0; i < Len; i++)
+	{
+		OLED_I2C_SendByte(Data[i]);
+	}
+	OLED_I2C_Stop();
+}
+
+static void OLED_MarkDirty(uint8_t page, uint8_t col)
+{
+	if(page >= OLED_PAGE_COUNT || col >= OLED_COL_COUNT)
+		return;
+
+	if(oled_dirty_min[page] == 0xFF)
+	{
+		oled_dirty_min[page] = col;
+		oled_dirty_max[page] = col;
+	}
+	else
+	{
+		if(col < oled_dirty_min[page]) oled_dirty_min[page] = col;
+		if(col > oled_dirty_max[page]) oled_dirty_max[page] = col;
+	}
+
+	oled_dirty = 1;
+}
+
+static void OLED_ResetDirty(void)
+{
+	uint8_t i;
+	for(i = 0; i < OLED_PAGE_COUNT; i++)
+	{
+		oled_dirty_min[i] = 0xFF;
+		oled_dirty_max[i] = 0;
+	}
+	oled_dirty = 0;
+}
+
+static void OLED_WriteByte(uint8_t Address, uint8_t Control, uint8_t Data)
+{
+	OLED_I2C_Start();
+	OLED_I2C_SendByte(Address);
+	OLED_I2C_SendByte(Control);
+	OLED_I2C_SendByte(Data);
+	OLED_I2C_Stop();
+}
 
 /*引脚初始化*/
 void OLED_I2C_Init(void)
@@ -33,8 +118,11 @@ void OLED_I2C_Start(void)
 {
 	OLED_W_SDA(1);
 	OLED_W_SCL(1);
+	OLED_I2C_Delay();
 	OLED_W_SDA(0);
+	OLED_I2C_Delay();
 	OLED_W_SCL(0);
+	OLED_I2C_Delay();
 }
 
 /**
@@ -45,8 +133,11 @@ void OLED_I2C_Start(void)
 void OLED_I2C_Stop(void)
 {
 	OLED_W_SDA(0);
+	OLED_I2C_Delay();
 	OLED_W_SCL(1);
+	OLED_I2C_Delay();
 	OLED_W_SDA(1);
+	OLED_I2C_Delay();
 }
 
 /**
@@ -60,11 +151,16 @@ void OLED_I2C_SendByte(uint8_t Byte)
 	for (i = 0; i < 8; i++)
 	{
 		OLED_W_SDA(!!(Byte & (0x80 >> i)));
+		OLED_I2C_Delay();
 		OLED_W_SCL(1);
+		OLED_I2C_Delay();
 		OLED_W_SCL(0);
+		OLED_I2C_Delay();
 	}
 	OLED_W_SCL(1);	//额外的一个时钟，不处理应答信号
+	OLED_I2C_Delay();
 	OLED_W_SCL(0);
+	OLED_I2C_Delay();
 }
 
 /**
@@ -74,11 +170,11 @@ void OLED_I2C_SendByte(uint8_t Byte)
   */
 void OLED_WriteCommand(uint8_t Command)
 {
-	OLED_I2C_Start();
-	OLED_I2C_SendByte(0x78);		//从机地址
-	OLED_I2C_SendByte(0x00);		//写命令
-	OLED_I2C_SendByte(Command); 
-	OLED_I2C_Stop();
+	OLED_WriteByte(OLED_I2C_ADDRESS, 0x00, Command);
+	if (OLED_I2C_ADDRESS_ALT != OLED_I2C_ADDRESS)
+	{
+		OLED_WriteByte(OLED_I2C_ADDRESS_ALT, 0x00, Command);
+	}
 }
 
 /**
@@ -88,11 +184,11 @@ void OLED_WriteCommand(uint8_t Command)
   */
 void OLED_WriteData(uint8_t Data)
 {
-	OLED_I2C_Start();
-	OLED_I2C_SendByte(0x78);		//从机地址
-	OLED_I2C_SendByte(0x40);		//写数据
-	OLED_I2C_SendByte(Data);
-	OLED_I2C_Stop();
+	OLED_WriteByte(OLED_I2C_ADDRESS, 0x40, Data);
+	if (OLED_I2C_ADDRESS_ALT != OLED_I2C_ADDRESS)
+	{
+		OLED_WriteByte(OLED_I2C_ADDRESS_ALT, 0x40, Data);
+	}
 }
 
 /**
@@ -116,14 +212,17 @@ void OLED_SetCursor(uint8_t Y, uint8_t X)
 void OLED_Clear(void)
 {  
 	uint8_t i, j;
-	for (j = 0; j < 8; j++)
+	for (j = 0; j < OLED_PAGE_COUNT; j++)
 	{
-		OLED_SetCursor(j, 0);
-		for(i = 0; i < 128; i++)
+		for(i = 0; i < OLED_COL_COUNT; i++)
 		{
-			OLED_WriteData(0x00);
+			oled_gram[j][i] = 0x00;
 		}
+		oled_dirty_min[j] = 0;
+		oled_dirty_max[j] = OLED_COL_COUNT - 1;
 	}
+	oled_dirty = 1;
+	OLED_Flush();
 }
 
 /**
@@ -136,15 +235,26 @@ void OLED_Clear(void)
 void OLED_ShowChar(uint8_t Line, uint8_t Column, char Char)
 {      	
 	uint8_t i;
-	OLED_SetCursor((Line - 1) * 2, (Column - 1) * 8);		//设置光标位置在上半部分
+	uint8_t page = (Line - 1) * 2;
+	uint8_t col = (Column - 1) * 8;
+
+	if(Line < 1 || Line > 4 || Column < 1 || Column > 16)
+		return;
+
+	if(Char < ' ' || Char > '~')
+		Char = ' ';
+
 	for (i = 0; i < 8; i++)
 	{
-		OLED_WriteData(OLED_F8x16[Char - ' '][i]);			//显示上半部分内容
+		oled_gram[page][col + i] = OLED_F8x16[Char - ' '][i];
+		OLED_MarkDirty(page, col + i);
 	}
-	OLED_SetCursor((Line - 1) * 2 + 1, (Column - 1) * 8);	//设置光标位置在下半部分
+
+	page++;
 	for (i = 0; i < 8; i++)
 	{
-		OLED_WriteData(OLED_F8x16[Char - ' '][i + 8]);		//显示下半部分内容
+		oled_gram[page][col + i] = OLED_F8x16[Char - ' '][i + 8];
+		OLED_MarkDirty(page, col + i);
 	}
 }
 
@@ -158,10 +268,64 @@ void OLED_ShowChar(uint8_t Line, uint8_t Column, char Char)
 void OLED_ShowString(uint8_t Line, uint8_t Column, char *String)
 {
 	uint8_t i;
+	if(String == NULL)
+		return;
+
 	for (i = 0; String[i] != '\0'; i++)
 	{
+		if(Column + i > 16)
+			break;
 		OLED_ShowChar(Line, Column + i, String[i]);
 	}
+}
+
+void OLED_ShowCustom8x16(uint8_t Line, uint8_t Column, const uint8_t *Glyph)
+{
+	uint8_t i;
+	uint8_t page = (Line - 1) * 2;
+	uint8_t col = (Column - 1) * 8;
+
+	if(Line < 1 || Line > 4 || Column < 1 || Column > 16 || Glyph == NULL)
+		return;
+
+	for(i = 0; i < 8; i++)
+	{
+		oled_gram[page][col + i] = Glyph[i];
+		OLED_MarkDirty(page, col + i);
+	}
+
+	page++;
+	for(i = 0; i < 8; i++)
+	{
+		oled_gram[page][col + i] = Glyph[i + 8];
+		OLED_MarkDirty(page, col + i);
+	}
+}
+
+void OLED_Flush(void)
+{
+	uint8_t page;
+	uint8_t len;
+
+	if(oled_dirty == 0)
+		return;
+
+	for(page = 0; page < OLED_PAGE_COUNT; page++)
+	{
+		if(oled_dirty_min[page] != 0xFF)
+		{
+			len = oled_dirty_max[page] - oled_dirty_min[page] + 1;
+			OLED_SetCursor(page, oled_dirty_min[page]);
+			OLED_WriteDataBurst(OLED_I2C_ADDRESS, &oled_gram[page][oled_dirty_min[page]], len);
+			if (OLED_I2C_ADDRESS_ALT != OLED_I2C_ADDRESS)
+			{
+				OLED_SetCursor(page, oled_dirty_min[page]);
+				OLED_WriteDataBurst(OLED_I2C_ADDRESS_ALT, &oled_gram[page][oled_dirty_min[page]], len);
+			}
+		}
+	}
+
+	OLED_ResetDirty();
 }
 
 /**
@@ -273,6 +437,7 @@ void OLED_ShowBinNum(uint8_t Line, uint8_t Column, uint32_t Number, uint8_t Leng
 void OLED_Init(void)
 {
 	uint32_t i, j;
+	OLED_ResetDirty();
 	
 	for (i = 0; i < 1000; i++)			//上电延时
 	{

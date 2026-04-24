@@ -1,6 +1,6 @@
 #include "stm32f10x.h"
 
-//Ó²¼şÇı¶¯
+//ç¡¬ä»¶é©±åŠ¨
 #include "led.h"
 
 
@@ -9,15 +9,15 @@ LED_INFO led_info = {0};
 
 /*
 ************************************************************
-*	º¯ÊıÃû³Æ£º	Led_Init
+*	å‡½æ•°åç§°ï¼š	Led_Init
 *
-*	º¯Êı¹¦ÄÜ£º	led³õÊ¼»¯
+*	å‡½æ•°åŠŸèƒ½ï¼š	ledåˆå§‹åŒ–
 *
-*	Èë¿Ú²ÎÊı£º	ÎŞ
+*	å…¥å£å‚æ•°ï¼š	æ— 
 *
-*	·µ»Ø²ÎÊı£º	ÎŞ
+*	è¿”å›å‚æ•°ï¼š	æ— 
 *
-*	ËµÃ÷£º		
+*	è¯´æ˜ï¼š		
 ************************************************************
 */
 void Led_Init(void)
@@ -25,16 +25,16 @@ void Led_Init(void)
 
 	GPIO_InitTypeDef gpio_initstruct;
 	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);		//´ò¿ªGPIOBµÄÊ±ÖÓ
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);		//æ‰“å¼€GPIOBçš„æ—¶é’Ÿ
 
 	
-	gpio_initstruct.GPIO_Mode = GPIO_Mode_Out_PP;				//ÉèÖÃÎªÊä³ö
-	gpio_initstruct.GPIO_Pin = GPIO_Pin_13;						//½«³õÊ¼»¯µÄPin½Å
-	gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;				//¿É³ĞÔØµÄ×î´óÆµÂÊ
+	gpio_initstruct.GPIO_Mode = GPIO_Mode_Out_PP;				//è®¾ç½®ä¸ºè¾“å‡º
+	gpio_initstruct.GPIO_Pin = GPIO_Pin_13;						//å°†åˆå§‹åŒ–çš„Pinè„š
+	gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;				//å¯æ‰¿è½½çš„æœ€å¤§é¢‘ç‡
 	
-	GPIO_Init(GPIOC, &gpio_initstruct);							//³õÊ¼»¯GPIO
+	GPIO_Init(GPIOC, &gpio_initstruct);							//åˆå§‹åŒ–GPIO
 	
-	Led_Set(LED_OFF);											//³õÊ¼»¯Íê³Éºó,¹Ø±ÕLED
+	Led_Set(LED_OFF);											//åˆå§‹åŒ–å®Œæˆå,å…³é—­LED
 
 }
 
@@ -42,7 +42,7 @@ void Led_Init(void)
 void Led_Set(_Bool status)
 {
 	
-	GPIO_WriteBit(GPIOC, GPIO_Pin_13, status == LED_ON ? Bit_RESET : Bit_SET);		//Èç¹ûstatusµÈÓÚLed_ON£¬Ôò·µ»ØBit_SET£¬·ñÔò·µ»ØBit_RESET
+	GPIO_WriteBit(GPIOC, GPIO_Pin_13, status == LED_ON ? Bit_RESET : Bit_SET);		//ï¿½ï¿½ï¿½statusï¿½ï¿½ï¿½ï¿½Led_ONï¿½ï¿½ï¿½ò·µ»ï¿½Bit_SETï¿½ï¿½ï¿½ï¿½ï¿½ò·µ»ï¿½Bit_RESET
 	
 	led_info.Led_Status = status;
 

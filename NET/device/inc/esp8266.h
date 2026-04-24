@@ -5,8 +5,8 @@
 
 
 
-#define REV_OK		0	//½ÓÊÕÍê³É±êÖ¾
-#define REV_WAIT	1	//½ÓÊÕÎ´Íê³É±êÖ¾
+#define REV_OK		0	//ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½É±ï¿½Ö¾
+#define REV_WAIT	1	//ï¿½ï¿½ï¿½ï¿½Î´ï¿½ï¿½É±ï¿½Ö¾
 
 
 void ESP8266_Init(void);
@@ -18,6 +18,18 @@ _Bool ESP8266_SendCmd(char *cmd, char *res);
 void ESP8266_SendData(unsigned char *data, unsigned short len);
 
 unsigned char *ESP8266_GetIPD(unsigned short timeOut);
+
+unsigned long ESP8266_GetTxBytes(void);
+
+unsigned long ESP8266_GetRxBytes(void);
+
+unsigned long ESP8266_GetIpdPackets(void);
+
+unsigned long ESP8266_GetSendCmdOkCount(void);
+
+unsigned long ESP8266_GetSendCmdFailCount(void);
+
+void ESP8266_ResetStats(void);
 
 
 #endif
