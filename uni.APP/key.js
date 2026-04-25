@@ -1,10 +1,13 @@
 const crypto = require('crypto')
 
 function createCommonToken(params) {
-    const access_key = Buffer.from( params.author_key, "base64")
+  const access_key = Buffer.from(params.author_key, "base64")
 
     const version = params.version
-    let res = 'userid' + '/' + params.user_id
+  let res = params.res
+  if (!res) {
+    res = 'userid' + '/' + params.user_id
+  }
     const et = Math.ceil((Date.now() + 365 * 24 * 3600 * 1000) / 1000)   
     const method = 'sha1'
 

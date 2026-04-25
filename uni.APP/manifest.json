@@ -1,6 +1,6 @@
 {
     "name" : "智能环境监测仪",
-    "appid" : "__UNI__384D986",
+    "appid" : "__UNI__D589040",
     "description" : "监测温湿度，控制LED灯与风扇",
     "versionName" : "1.0.0",
     "versionCode" : "100",
@@ -57,7 +57,7 @@
             "urlCheck" : false
         },
         "usingComponents" : true,
-		"lazyCodeLoading": "requiredComponents"
+        "lazyCodeLoading" : "requiredComponents"
     },
     "mp-alipay" : {
         "usingComponents" : true

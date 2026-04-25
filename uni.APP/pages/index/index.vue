@@ -62,6 +62,19 @@
 	const {
 		createCommonToken
 	} = require('@/key.js')
+
+	const ONENET_CONFIG = {
+		productId: 'd203p9ta5l',
+		deviceName: 'Device',
+		queryUrl: 'https://iot-api.heclouds.com/thingmodel/query-device-property',
+		setUrl: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
+		property: {
+			temp: 'temp_value',
+			humi: 'humidity_value',
+			led: 'led',
+			fan: 'fan_value'
+		}
+	}
 	export default {
 		data() {
 			return {
@@ -70,99 +83,164 @@
 				led: false,
 				fanSpeed: 0,
 				token: '',
+				pollTimer: null,
+				isFetching: false,
 			}
 		},
 		onLoad() {
 			const params = {
-				author_key: 'qFh4YyMWS3+z3YYzdznRgOeaUB52VTGVxIa0paWZLQEFf45iaAHZZAiJBAdH/FK8',
+				author_key: 'qdeBI02D6akDEWdrlxPNUTGXUSVpsyHFcTPJE0cjEXs=',
 				version: '2022-05-01',
-				user_id: '461812',
+				res: 'products/' + ONENET_CONFIG.productId,
 			}
 			this.token = createCommonToken(params);
 		},
 		onShow() {
-			this.fetchDevData();
-			setInterval(() => {
-				this.fetchDevData();
-			}, 3000)
+			this.startPolling();
+		},
+		onHide() {
+			this.stopPolling();
+		},
+		onUnload() {
+			this.stopPolling();
 		},
 		methods: {
+			startPolling() {
+				if (this.pollTimer != null) {
+					return;
+				}
+
+				this.fetchDevData();
+				this.pollTimer = setInterval(() => {
+					this.fetchDevData();
+				}, 3000);
+			},
+			stopPolling() {
+				if (this.pollTimer != null) {
+					clearInterval(this.pollTimer);
+					this.pollTimer = null;
+				}
+			},
 			findPropValue(list, identifier) {
 				if (!Array.isArray(list)) return undefined;
 				const item = list.find(it => it && it.identifier === identifier);
 				return item ? item.value : undefined;
 			},
 			fetchDevData() {
+				if (this.isFetching) {
+					return;
+				}
+
+				this.isFetching = true;
 				uni.request({
-					url: 'https://iot-api.heclouds.com/thingmodel/query-device-property',
+					url: ONENET_CONFIG.queryUrl,
 					method: 'GET',
 
 					data: {
-						product_id: '1b8L52evN5',
-						device_name: 'dev01',
+						product_id: ONENET_CONFIG.productId,
+						device_name: ONENET_CONFIG.deviceName,
 					},
 					header: {
 						'authorization': this.token //自定义请求头信息
 					},
 					success: (res) => {
 						console.log(res.data);
-						const data = res && res.data && res.data.data ? res.data.data : [];
-						const fanVal = this.findPropValue(data, 'fan_value');
-						const humiVal = this.findPropValue(data, 'humidity_value');
-						const ledVal = this.findPropValue(data, 'led');
-						const tempVal = this.findPropValue(data, 'temp_value');
+						const resp = res && res.data ? res.data : {};
+						if (resp.code && resp.code !== 0) {
+							if (resp.code === 10403) {
+								this.stopPolling();
+								uni.showToast({
+									icon: 'none',
+									title: '设备无权限(10403)'
+								});
+								console.error('OneNET 10403: token资源或账号无该设备权限', {
+									product_id: ONENET_CONFIG.productId,
+									device_name: ONENET_CONFIG.deviceName,
+									msg: resp.msg,
+									request_id: resp.request_id
+								});
+							}
+							return;
+						}
+						const data = resp.data || [];
+						const fanVal = this.findPropValue(data, ONENET_CONFIG.property.fan);
+						const humiVal = this.findPropValue(data, ONENET_CONFIG.property.humi);
+						const ledVal = this.findPropValue(data, ONENET_CONFIG.property.led);
+						const tempVal = this.findPropValue(data, ONENET_CONFIG.property.temp);
 
 						if (fanVal !== undefined) this.fanSpeed = parseInt(fanVal) || 0;
 						if (humiVal !== undefined) this.humi = humiVal;
 						if (ledVal !== undefined) this.led = (ledVal === true || ledVal === 'true' || ledVal === 1 || ledVal === '1');
 						if (tempVal !== undefined) this.temp = tempVal;
+					},
+					complete: () => {
+						this.isFetching = false;
+					}
+				});
+			},
+			pushDeviceProperty(params, onSuccessMessage) {
+				uni.request({
+					url: ONENET_CONFIG.setUrl,
+					method: 'POST',
+					data: {
+						product_id: ONENET_CONFIG.productId,
+						device_name: ONENET_CONFIG.deviceName,
+						params: params
+					},
+					header: {
+						'authorization': this.token
+					},
+					success: (res) => {
+						const resp = res && res.data ? res.data : {};
+						if (resp.code && resp.code !== 0) {
+							if (resp.code === 10403) {
+								uni.showToast({
+									icon: 'none',
+									title: '无控制权限(10403)'
+								});
+								console.error('OneNET 10403: 下发权限不足', {
+									product_id: ONENET_CONFIG.productId,
+									device_name: ONENET_CONFIG.deviceName,
+									msg: resp.msg,
+									request_id: resp.request_id
+								});
+							} else {
+								uni.showToast({
+									icon: 'none',
+									title: '下发失败 code=' + resp.code
+								});
+							}
+							return;
+						}
+
+						if (onSuccessMessage) {
+							console.log(onSuccessMessage);
+						}
+					},
+					fail: () => {
+						uni.showToast({
+							icon: 'none',
+							title: '云端下发失败'
+						});
 					}
 				});
 			},
 			onLedSwitch(event) {
 				console.log(event.detail.value);
-				let value = event.detail.value;
-				uni.request({
-					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
-					method: 'POST',
-
-					data: {
-						product_id: '1b8L52evN5',
-						device_name: 'dev01',
-						params: {
-							"led": value
-						}
-					},
-					header: {
-						'authorization': this.token //自定义请求头信息
-					},
-					success: () => {
-						console.log('LED ' + (value ? 'ON' : 'OFF') + ' !');
-					}
-				});
+				const value = event.detail.value;
+				this.led = value;
+				this.pushDeviceProperty({
+					led: value
+				}, 'LED ' + (value ? 'ON' : 'OFF') + ' !');
 			},
 			setFanSpeed(speed) {
 				this.fanSpeed = speed;
-				uni.request({
-					url: 'https://iot-api.heclouds.com/thingmodel/set-device-property',
-					method: 'POST',
-					data: {
-						product_id: '1b8L52evN5',
-						device_name: 'dev01',
-						params: {
-							"fan_value": speed
-						}
-					},
-					header: {
-						'authorization': this.token
-					},
-					success: () => {
-						console.log('风扇已设置为' + (
-							speed === 0 ? '停止' :
-									speed + '档'
-						));
-					}
-				});
+				this.pushDeviceProperty({
+					fan_value: speed
+				}, '风扇已设置为' + (
+					speed === 0 ? '停止' :
+						speed + '档'
+				));
 			}
 		}
 	}

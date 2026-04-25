@@ -37,7 +37,7 @@ void Led_Init(void)
 void Led_Set(_Bool status)
 {
 	
-	GPIO_WriteBit(GPIOC, GPIO_Pin_13, status == LED_ON ? Bit_RESET : Bit_SET);		// Active-low LED on PC13.
+	GPIO_WriteBit(GPIOC, GPIO_Pin_13, status == LED_ON ? Bit_SET : Bit_RESET);		// Active-high LED on PC13.
 	
 	led_info.Led_Status = status;
 
