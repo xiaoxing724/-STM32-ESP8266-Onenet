@@ -1,13 +1,13 @@
 #include "stm32f10x.h"
 
-//�����豸����
+// 网络设备驱动
 #include "esp8266.h"
 
-//Ӳ������
+// 硬件驱动
 #include "delay.h"
 #include "usart.h"
 
-//C��
+// C library
 #include <string.h>
 #include <stdio.h>
 
@@ -30,15 +30,10 @@ static volatile unsigned long esp8266_sendcmd_fail = 0;
 
 
 //==========================================================
-//	�������ƣ�	ESP8266_Clear
-//
-//	�������ܣ�	��ջ���
-//
-//	��ڲ�����	��
-//
-//	���ز�����	��
-//
-//	˵����		
+// Function: ESP8266_Clear
+// Purpose : Clear RX buffer.
+// Params  : None.
+// Return  : None.
 //==========================================================
 void ESP8266_Clear(void)
 {
@@ -49,46 +44,35 @@ void ESP8266_Clear(void)
 }
 
 //==========================================================
-//	�������ƣ�	ESP8266_WaitRecive
-//
-//	�������ܣ�	�ȴ��������
-//
-//	��ڲ�����	��
-//
-//	���ز�����	REV_OK-�������		REV_WAIT-���ճ�ʱδ���
-//
-//	˵����		ѭ�����ü���Ƿ�������
+// Function: ESP8266_WaitRecive
+// Purpose : Poll until UART RX becomes stable.
+// Params  : None.
+// Return  : REV_OK when done, REV_WAIT while receiving.
 //==========================================================
 _Bool ESP8266_WaitRecive(void)
 {
 
-	if(esp8266_cnt == 0) 							//������ռ���Ϊ0 ��˵��û�д��ڽ��������У�����ֱ����������������
+	if(esp8266_cnt == 0) 							// 当前无数据，继续等待
 		return REV_WAIT;
 		
-	if(esp8266_cnt == esp8266_cntPre)				//�����һ�ε�ֵ�������ͬ����˵���������
+	if(esp8266_cnt == esp8266_cntPre)				// 计数未变化，判定接收结束
 	{
-		esp8266_cnt = 0;							//��0���ռ���
+		esp8266_cnt = 0;							// Reset counter.
 			
-		return REV_OK;								//���ؽ�����ɱ�־
+		return REV_OK;								// 返回接收完成
 	}
 		
-	esp8266_cntPre = esp8266_cnt;					//��Ϊ��ͬ
+	esp8266_cntPre = esp8266_cnt;					// 更新基准计数
 	
-	return REV_WAIT;								//���ؽ���δ��ɱ�־
+	return REV_WAIT;								// Still receiving.
 
 }
 
 //==========================================================
-//	�������ƣ�	ESP8266_SendCmd
-//
-//	�������ܣ�	��������
-//
-//	��ڲ�����	cmd������
-//				res����Ҫ���ķ���ָ��
-//
-//	���ز�����	0-�ɹ�	1-ʧ��
-//
-//	˵����		
+// Function: ESP8266_SendCmd
+// Purpose : Send AT command and wait expected token.
+// Params  : cmd command string, res expected token.
+// Return  : 0 success, 1 fail.
 //==========================================================
 _Bool ESP8266_SendCmd(char *cmd, char *res)
 {
@@ -99,12 +83,12 @@ _Bool ESP8266_SendCmd(char *cmd, char *res)
 	
 	while(timeOut--)
 	{
-		if(ESP8266_WaitRecive() == REV_OK)							//����յ�����
+		if(ESP8266_WaitRecive() == REV_OK)							// 收到完整响应
 		{
-			if(strstr((const char *)esp8266_buf, res) != NULL)		//����������ؼ���
+			if(strstr((const char *)esp8266_buf, res) != NULL)		// Expected token found.
 			{
 				esp8266_sendcmd_ok++;
-				ESP8266_Clear();									//��ջ���
+				ESP8266_Clear();									// Clear RX buffer.
 				
 				return 0;
 			}
@@ -120,43 +104,31 @@ _Bool ESP8266_SendCmd(char *cmd, char *res)
 }
 
 //==========================================================
-//	�������ƣ�	ESP8266_SendData
-//
-//	�������ܣ�	��������
-//
-//	��ڲ�����	data������
-//				len������
-//
-//	���ز�����	��
-//
-//	˵����		
+// Function: ESP8266_SendData
+// Purpose : Send payload via transparent mode.
+// Params  : data pointer, len bytes.
+// Return  : None.
 //==========================================================
 void ESP8266_SendData(unsigned char *data, unsigned short len)
 {
 
 	char cmdBuf[32];
 	
-	ESP8266_Clear();								//��ս��ջ���
-	sprintf(cmdBuf, "AT+CIPSEND=%d\r\n", len);		//��������
-	if(!ESP8266_SendCmd(cmdBuf, ">"))				//�յ���>��ʱ���Է�������
+	ESP8266_Clear();								// Clear buffer before send.
+	sprintf(cmdBuf, "AT+CIPSEND=%d\r\n", len);		// Declare payload length.
+	if(!ESP8266_SendCmd(cmdBuf, ">"))				// Send after prompt.
 	{
-		Usart_SendString(USART2, data, len);		//�����豸������������
+		Usart_SendString(USART2, data, len);		// Write to UART.
 		esp8266_tx_bytes += len;
 	}
 
 }
 
 //==========================================================
-//	�������ƣ�	ESP8266_GetIPD
-//
-//	�������ܣ�	��ȡƽ̨���ص�����
-//
-//	��ڲ�����	�ȴ���ʱ��(����10ms)
-//
-//	���ز�����	ƽ̨���ص�ԭʼ����
-//
-//	˵����		��ͬ�����豸���صĸ�ʽ��ͬ����Ҫȥ����
-//				��ESP8266�ķ��ظ�ʽΪ	"+IPD,x:yyy"	x�������ݳ��ȣ�yyy����������
+// Function: ESP8266_GetIPD
+// Purpose : Locate payload in +IPD response.
+// Params  : timeOut poll count.
+// Return  : Payload pointer, or NULL on timeout.
 //==========================================================
 unsigned char *ESP8266_GetIPD(unsigned short timeOut)
 {
@@ -165,16 +137,16 @@ unsigned char *ESP8266_GetIPD(unsigned short timeOut)
 	
 	do
 	{
-		if(ESP8266_WaitRecive() == REV_OK)								//����������
+		if(ESP8266_WaitRecive() == REV_OK)								// 接收完成
 		{
-			ptrIPD = strstr((char *)esp8266_buf, "IPD,");				//������IPD��ͷ
-			if(ptrIPD == NULL)											//���û�ҵ���������IPDͷ���ӳ٣�������Ҫ�ȴ�һ�ᣬ�����ᳬ���趨��ʱ��
+			ptrIPD = strstr((char *)esp8266_buf, "IPD,");				// Find IPD header.
+			if(ptrIPD == NULL)											// 未找到则继续等待
 			{
 				//UsartPrintf(USART_DEBUG, "\"IPD\" not found\r\n");
 			}
 			else
 			{
-				ptrIPD = strchr(ptrIPD, ':');							//�ҵ�':'
+				ptrIPD = strchr(ptrIPD, ':');							// 定位 ':'
 				if(ptrIPD != NULL)
 				{
 					ptrIPD++;
@@ -187,23 +159,18 @@ unsigned char *ESP8266_GetIPD(unsigned short timeOut)
 			}
 		}
 		
-		DelayXms(ESP8266_POLL_STEP_MS);									//��ʱ�ȴ�
+		DelayXms(ESP8266_POLL_STEP_MS);									// Short polling delay.
 	} while(timeOut--);
 	
-	return NULL;														//��ʱ��δ�ҵ������ؿ�ָ��
+	return NULL;														// Timeout.
 
 }
 
 //==========================================================
-//	�������ƣ�	ESP8266_Init
-//
-//	�������ܣ�	��ʼ��ESP8266
-//
-//	��ڲ�����	��
-//
-//	���ز�����	��
-//
-//	˵����		
+// Function: ESP8266_Init
+// Purpose : Initialize ESP8266 and connect WiFi.
+// Params  : None.
+// Return  : None.
 //==========================================================
 void ESP8266_Init(void)
 {
@@ -285,22 +252,17 @@ void ESP8266_Init(void)
 }
 
 //==========================================================
-//	�������ƣ�	USART2_IRQHandler
-//
-//	�������ܣ�	����2�շ��ж�
-//
-//	��ڲ�����	��
-//
-//	���ز�����	��
-//
-//	˵����		
+// Function: USART2_IRQHandler
+// Purpose : USART2 RX interrupt handler.
+// Params  : None.
+// Return  : None.
 //==========================================================
 void USART2_IRQHandler(void)
 {
 
-	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) //�����ж�
+	if(USART_GetITStatus(USART2, USART_IT_RXNE) != RESET) // 接收中断
 	{
-		if(esp8266_cnt >= sizeof(esp8266_buf))	esp8266_cnt = 0; //��ֹ���ڱ�ˢ��
+		if(esp8266_cnt >= sizeof(esp8266_buf))	esp8266_cnt = 0; // 防止越界
 		esp8266_buf[esp8266_cnt++] = USART2->DR;
 		esp8266_rx_bytes++;
 		

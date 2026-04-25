@@ -25,24 +25,31 @@
 				</view>
 				<switch :checked="led" @change="onLedSwitch" color="#2b9939" />
 			</view>
-			<view class="dev-cart">
-				<view class="">
+			<view class="dev-cart fan-card">
+				<view class="fan-head">
 					<view class="dev-name">风扇</view>
 					<image class="dev-logo" src="../../static/fan.png" mode="">
 					</image>
+					<view class="fan-state">当前档位 {{fanSpeed}}</view>
 				</view>
 				<view class="fan-controls">
 					<button class="fan-btn" :class="{ active: fanSpeed === 0 }" @click="setFanSpeed(0)">
 						停止
 					</button>
 					<button class="fan-btn" :class="{ active: fanSpeed === 1 }" @click="setFanSpeed(1)">
-						一档
+						1
 					</button>
 					<button class="fan-btn" :class="{ active: fanSpeed === 2 }" @click="setFanSpeed(2)">
-						二档
+						2
 					</button>
 					<button class="fan-btn" :class="{ active: fanSpeed === 3 }" @click="setFanSpeed(3)">
-						三档
+						3
+					</button>
+					<button class="fan-btn" :class="{ active: fanSpeed === 4 }" @click="setFanSpeed(4)">
+						4
+					</button>
+					<button class="fan-btn" :class="{ active: fanSpeed === 5 }" @click="setFanSpeed(5)">
+						5
 					</button>
 				</view>
 			</view>
@@ -152,8 +159,7 @@
 					success: () => {
 						console.log('风扇已设置为' + (
 							speed === 0 ? '停止' :
-							speed === 1 ? '一档' :
-							speed === 2 ? '二档' : '三档'
+									speed + '档'
 						));
 					}
 				});
@@ -202,29 +208,67 @@
 		color: #6d6d6d;
 	}
 
+	.fan-card {
+		width: 100%;
+		height: auto;
+		padding: 20rpx 22rpx;
+		justify-content: space-between;
+		align-items: stretch;
+		background: linear-gradient(145deg, #ffffff 0%, #f4f8f6 100%);
+	}
+
+	.fan-head {
+		width: 108rpx;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10rpx;
+	}
+
 	.fan-controls {
-		display: grid; /* 使用网格布局 */
-		grid-template-columns: 1fr 1fr; /* 两列等宽 */
-		grid-gap: 8rpx; /* 按钮之间的间距 */
-		padding: 10rpx;
+		flex: 1;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-rows: repeat(2, 1fr);
+		grid-gap: 16rpx;
+		padding-left: 14rpx;
+		align-content: stretch;
 	}
 
 	.fan-btn {
-		width: 80rpx;
-		height: 60rpx;
-		line-height: 30rpx;
-		font-size: 18rpx;
+		width: 100%;
+		height: 80rpx;
+		line-height: 80rpx;
+		font-size: 30rpx;
+		font-weight: 600;
 		padding: 0;
-		background-color: #f5f5f5;
-		color: #6d6d6d;
+		background: #edf2ef;
+		color: #4a5a52;
 		display: flex;
 		justify-content: center;
 		align-items: center;
+		border: 2rpx solid #dbe6df;
+		border-radius: 22rpx;
+		box-shadow: 0 6rpx 12rpx rgba(28, 64, 40, 0.08);
 	}
 
 	.fan-btn.active {
-		background-color: #2b9939;
+		background: linear-gradient(135deg, #2b9939 0%, #43c96a 100%);
 		color: white;
+		border-color: #2b9939;
+		box-shadow: 0 10rpx 18rpx rgba(43, 153, 57, 0.28);
+	}
+
+	.fan-state {
+		min-width: 110rpx;
+		height: 38rpx;
+		line-height: 38rpx;
+		text-align: center;
+		font-size: 20rpx;
+		color: #1f6b2a;
+		background: #e5f5e8;
+		border-radius: 999rpx;
+		padding: 0 12rpx;
 	}
 
 	.title {

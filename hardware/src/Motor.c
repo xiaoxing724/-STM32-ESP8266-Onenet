@@ -2,7 +2,24 @@
 #include "PWM.h"
 #include "Motor.h"
 
+const uint8_t FAN_SPEED_PWM_TABLE[FAN_SPEED_LEVELS] = {0, 20, 40, 60, 80, 100};
+
 uint8_t fan_speed = 0;
+
+static uint8_t Motor_NormalizeGear(uint8_t Gear)
+{
+	if(Gear <= FAN_GEAR_MIN)
+	{
+		return FAN_GEAR_MIN;
+	}
+
+	if(Gear >= FAN_GEAR_MAX)
+	{
+		return FAN_GEAR_MAX;
+	}
+
+	return Gear;
+}
 
 void Motor_Init(void)
 {
@@ -20,8 +37,10 @@ void Motor_Init(void)
 
 void Motor_SetSpeed(uint8_t Speed)
 {
+	uint8_t gear = Motor_NormalizeGear(Speed);
+
 	GPIO_SetBits(GPIOA, GPIO_Pin_5);
 	GPIO_ResetBits(GPIOA, GPIO_Pin_4);
-	fan_speed = Speed;
-	PWM_Setcompare2(Speed);
+	fan_speed = gear;
+	PWM_Setcompare2(FAN_SPEED_PWM_TABLE[gear]);
 }

@@ -9,15 +9,10 @@ LED_INFO led_info = {0};
 
 /*
 ************************************************************
-*	函数名称：	Led_Init
-*
-*	函数功能：	led初始化
-*
-*	入口参数：	无
-*
-*	返回参数：	无
-*
-*	说明：		
+* Function: Led_Init
+* Purpose : Initialize LED GPIO.
+* Params  : None.
+* Return  : None.
 ************************************************************
 */
 void Led_Init(void)
@@ -25,12 +20,12 @@ void Led_Init(void)
 
 	GPIO_InitTypeDef gpio_initstruct;
 	
-	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);		//打开GPIOB的时钟
+	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOC, ENABLE);		// Enable GPIOC clock.
 
 	
-	gpio_initstruct.GPIO_Mode = GPIO_Mode_Out_PP;				//设置为输出
-	gpio_initstruct.GPIO_Pin = GPIO_Pin_13;						//将初始化的Pin脚
-	gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;				//可承载的最大频率
+	gpio_initstruct.GPIO_Mode = GPIO_Mode_Out_PP;				// Push-pull output.
+	gpio_initstruct.GPIO_Pin = GPIO_Pin_13;						// Use PC13.
+	gpio_initstruct.GPIO_Speed = GPIO_Speed_50MHz;				// GPIO speed.
 	
 	GPIO_Init(GPIOC, &gpio_initstruct);							//初始化GPIO
 	
@@ -42,7 +37,7 @@ void Led_Init(void)
 void Led_Set(_Bool status)
 {
 	
-	GPIO_WriteBit(GPIOC, GPIO_Pin_13, status == LED_ON ? Bit_RESET : Bit_SET);		//���status����Led_ON���򷵻�Bit_SET�����򷵻�Bit_RESET
+	GPIO_WriteBit(GPIOC, GPIO_Pin_13, status == LED_ON ? Bit_RESET : Bit_SET);		// Active-low LED on PC13.
 	
 	led_info.Led_Status = status;
 

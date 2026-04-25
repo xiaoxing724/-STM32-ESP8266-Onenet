@@ -2,18 +2,18 @@
 #define DHT11_H
 
 #include "stm32f10x.h"
-//PA11
+// PA0
 #define DHT11_IO_IN()  {GPIOA->CRL&=0XFFFFFFF0;GPIOA->CRL|=8;}
 #define DHT11_IO_OUT() {GPIOA->CRL&=0XFFFFFFF0;GPIOA->CRL|=3;} 
-//IO操作函数   
+// IO helper macros
 #define	DHT11_DQ_OUT(X)  GPIO_WriteBit(GPIOA, GPIO_Pin_0, (BitAction)X)
 #define	DHT11_DQ_IN  GPIO_ReadInputDataBit(GPIOA, GPIO_Pin_0)
 
-u8 DHT11_Init(void);//初始化DHT11
-u8 DHT11_Read_Data(u8 *temp,u8 *humi);//读取数据
-u8 DHT11_Read_Byte(void);//读取一个字节
-u8 DHT11_Read_Bit(void);//读取一位
-u8 DHT11_Check(void);//检测DHT11
-void DHT11_Rst(void);//复位DHT11   
+u8 DHT11_Init(void); // Initialize DHT11
+u8 DHT11_Read_Data(u8 *temp,u8 *humi); // Read humidity and temperature
+u8 DHT11_Read_Byte(void); // 璇诲彇 1 瀛楄妭
+u8 DHT11_Read_Bit(void); // 璇诲彇 1 bit
+u8 DHT11_Check(void); // Check DHT11 presence
+void DHT11_Rst(void); // 澶嶄綅 DHT11
 
 #endif

@@ -5,8 +5,8 @@
 
 
 
-#define REV_OK		0	//������ɱ�־
-#define REV_WAIT	1	//����δ��ɱ�־
+#define REV_OK		0	// Receive done flag
+#define REV_WAIT	1	// Receive pending flag
 
 
 void ESP8266_Init(void);

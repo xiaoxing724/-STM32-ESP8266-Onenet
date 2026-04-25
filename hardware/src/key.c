@@ -76,10 +76,10 @@ void EXTI15_10_IRQHandler(void)
 	DelayXms(10);
 	if(GPIO_ReadInputDataBit(GPIOB, GPIO_Pin_11) == 0)
 	{
-		fan_speed += 20;
-		if(fan_speed > 100)
+		fan_speed++;
+		if(fan_speed > FAN_GEAR_MAX)
 		{
-			fan_speed = 0;
+			fan_speed = FAN_SPEED_MIN;
 		}
 		Motor_SetSpeed(fan_speed);
 	}

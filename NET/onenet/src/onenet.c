@@ -29,11 +29,11 @@
 
 #define DEVICE_NAME		"Device"
 
-// OneNET物模型属性标识符，和平台一致即可
+// OneNET物模型属性标识符，和平台一致即�?
 #define PROP_ID_TEMP		"temp_value"
 #define PROP_ID_HUMI		"humidity_value"
-#define PROP_ID_LED		"led"
-#define PROP_ID_FAN		"fan_value"
+#define PROP_ID_LED		    "led"
+#define PROP_ID_FAN		    "fan_value"
 
 
 char devid[16];
@@ -50,7 +50,7 @@ extern unsigned char esp8266_buf[512];
 *
 *	�������ܣ�	sign��Ҫ����URL����
 *
-*	��ڲ�����	sign�����ܽ��
+*	��ڲ�����?sign�����ܽ��?
 *
 *	���ز�����	0-�ɹ�	����-ʧ��
 *
@@ -135,7 +135,7 @@ static unsigned char OTA_UrlEncode(char *sign)
 *
 *	�������ܣ�	����Authorization
 *
-*	��ڲ�����	ver��������汾�ţ����ڸ�ʽ��Ŀǰ��֧�ָ�ʽ"2018-10-31"
+*	��ڲ�����?ver��������汾�ţ����ڸ�ʽ��Ŀǰ��֧�ָ��?2018-10-31"
 *				res����Ʒid
 *				et������ʱ�䣬UTC��ֵ
 *				access_key��������Կ
@@ -212,7 +212,7 @@ static unsigned char OneNET_Authorization(char *ver, char *res, unsigned int et,
 //
 //	�������ܣ�	�ڲ�Ʒ��ע��һ���豸
 //
-//	��ڲ�����	access_key��������Կ
+//	��ڲ�����?access_key��������Կ
 //				pro_id����ƷID
 //				serial��Ψһ�豸��
 //				devid�����淵�ص�devid
@@ -299,7 +299,7 @@ _Bool OneNET_RegisterDevice(void)
 //
 //	�������ܣ�	��onenet��������
 //
-//	��ڲ�����	��
+//	��ڲ�����?��
 //
 //	���ز�����	1-�ɹ�	0-ʧ��
 //
@@ -308,7 +308,7 @@ _Bool OneNET_RegisterDevice(void)
 _Bool OneNet_DevLink(void)
 {
 	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};					//Э���
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};					//Э���?
 
 	unsigned char *dataPtr;
 	
@@ -393,7 +393,7 @@ unsigned char OneNet_FillBuf(char *buf)
 //
 //	�������ܣ�	�ϴ����ݵ�ƽ̨
 //
-//	��ڲ�����	type���������ݵĸ�ʽ
+//	��ڲ�����?type���������ݵĸ�ʽ
 //
 //	���ز�����	��
 //
@@ -402,7 +402,7 @@ unsigned char OneNet_FillBuf(char *buf)
 void OneNet_SendData(void)
 {
 	
-	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};												//Э���
+	MQTT_PACKET_STRUCTURE mqttPacket = {NULL, 0, 0, 0};												//Э���?
 	
 	char buf[256];
 	
@@ -416,7 +416,7 @@ void OneNet_SendData(void)
 	
 	if(body_len)
 	{
-		if(MQTT_PacketSaveData(PROID, DEVICE_NAME, body_len, NULL, &mqttPacket) == 0)				//���
+		if(MQTT_PacketSaveData(PROID, DEVICE_NAME, body_len, NULL, &mqttPacket) == 0)				//���?
 		{
 			for(; i < body_len; i++)
 				mqttPacket._data[mqttPacket._len++] = buf[i];
@@ -437,7 +437,7 @@ void OneNet_SendData(void)
 //
 //	�������ܣ�	������Ϣ
 //
-//	��ڲ�����	topic������������
+//	��ڲ�����?topic������������
 //				msg����Ϣ����
 //
 //	���ز�����	��
@@ -447,7 +447,7 @@ void OneNet_SendData(void)
 void OneNET_Publish(const char *topic, const char *msg)
 {
 
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//Э���
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//Э���?
 	
 	UsartPrintf(USART_DEBUG, "Publish Topic: %s, Msg: %s\r\n", topic, msg);
 	
@@ -465,7 +465,7 @@ void OneNET_Publish(const char *topic, const char *msg)
 //
 //	�������ܣ�	����
 //
-//	��ڲ�����	��
+//	��ڲ�����?��
 //
 //	���ز�����	��
 //
@@ -474,7 +474,7 @@ void OneNET_Publish(const char *topic, const char *msg)
 void OneNET_Subscribe(void)
 {
 	
-	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//Э���
+	MQTT_PACKET_STRUCTURE mqtt_packet = {NULL, 0, 0, 0};						//Э���?
 	char topic_set[56];
 	char topic_post_reply[64];
 	const char *topics[2];
@@ -500,9 +500,9 @@ void OneNET_Subscribe(void)
 //==========================================================
 //	�������ƣ�	OneNet_RevPro
 //
-//	�������ܣ�	ƽ̨�������ݼ��
+//	�������ܣ�	ƽ̨�������ݼ��?
 //
-//	��ڲ�����	dataPtr��ƽ̨���ص�����
+//	��ڲ�����?dataPtr��ƽ̨���ص�����
 //
 //	���ز�����	��
 //
@@ -620,7 +620,7 @@ void OneNet_RevPro(unsigned char *cmd)
 		break;
 	}
 	
-	ESP8266_Clear();									//��ջ���
+	ESP8266_Clear();									//��ջ���?
 	
 	if(result == -1)
 		return;
